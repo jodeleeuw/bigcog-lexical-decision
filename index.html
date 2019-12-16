@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="jspsych/jspsych.js"></script>
+    <script src="jspsych/plugins/jspsych-html-keyboard-response.js"></script>
+    <link rel="stylesheet" href="jspsych/css/jspsych.css">
+    <style>
+      .fixation { border: 2px solid black; height: 100px; width: 200px; font-size: 24px; position: relative; }
+      .fixation p { width: 100%; position: absolute; margin: 0.25em;}
+      .fixation p.top { top: 0px; }
+      .fixation p.bottom { bottom: 0px; }
+
+      .correct { border-color: green;}
+      .incorrect { border-color: red; }
+    </style>
+  </head>
+  <body></body>
+  <script>
+    var timeline = [];
+
+    var welcome = {
+      type: 'html-keyboard-response',
+      stimulus: '<p>Welcome to the experiment. Please press C to continue.</p>',
+      choices: ['c']
+    }
+
+    timeline.push(welcome);
+
+    // on each trial we show fixation, two words, and feedback
+    // words are either semantically related or not
+
+    // finish with display of summary data for related v. unrelated words
+    var fixation = {
+      type: 'html-keyboard-response',
+      stimulus: '<div class="fixation"></div>',
+      choices: jsPsych.NO_KEYS,
+      trial_duration: 1000
+    }
+
+    timeline.push(fixation);
+
+    var decision = {
+      type: 'html-keyboard-response',
+      stimulus: '<div class="fixation"><p class="top">DOCTOR</p><p class="bottom">NURSE</p></div>',
+      choices: ['y','n'],
+      data: {
+        both_words: true,
+        related: true
+      },
+      on_finish: function(data){
+        var char_resp = jsPsych.pluginAPI.convertKeyCodeToKeyCharacter(data.key_press);
+        if(data.both_words){
+          data.correct = char_resp == 'y';
+        } else {
+          data.correct = char_resp == 'n';
+        }
+      }
+    }
+    
+    timeline.push(decision);
+
+    var feedback = {
+      type: 'html-keyboard-response',
+      stimulus: function(){
+        var last_correct = jsPsych.data.get().last(1).values()[0].correct;
+        if(last_correct){
+          return '<div class="fixation correct"></div>';
+        } else {
+          return '<div class="fixation incorrect"></div>';
+        }
+      },
+      choices: jsPsych.NO_KEYS,
+      trial_duration: 2000
+    }
+
+    timeline.push(feedback);
+
+    jsPsych.init({
+      timeline: timeline
+    })
+  </script>
+</html>
